@@ -23,10 +23,13 @@ class Teste():
             saida+=str(i)+" "
         return saida
     
-    def teste_estatico(Teste,i):
-        return Teste.lista[i]
+    @staticmethod
+    def joga(a):
+        print(a)
+    
+    def teste_stetic(Teste,i):
+        Teste.joga(i)
     
 lista=[1,2,3,4,5]
 teste=Teste(lista)
-teste.n+=1
-print(teste.n)
+teste.teste_stetic(2)

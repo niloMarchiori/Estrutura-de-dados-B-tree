@@ -1,11 +1,11 @@
 from math import ceil
 
 class Node():
-    def __init__(self,t,keys=[],data=[],pointers=[],leaf=True,parent=None):
+    def __init__(self,t,keys:list=[],data:list=[],pointers:list=[],leaf:bool=True,parent=None):
         self._t=t #número máximo de filhos
-        self._structure=[[None for _  in range(t-1)],     #Keys
-                         [None for _  in range(t-1)],     #Data
-                         [None for _  in range(t)]]   #Pointers
+        self._structure=[keys[:],     #Keys
+                         data[:],     #Data
+                         pointers[:]]   #Pointers
         self._n=0 #número atual de keys registradas nesse nó, não possui setter ou getter por ser
                   #um atributo que só é alterado a partir de outros métodos (protegido)
         self._leaf=leaf #informação booleana desse nó ser ou não folha
@@ -13,14 +13,10 @@ class Node():
         self._parent=parent
 
         if keys:
-            self.keys=keys
             self._n=len(keys)
+        if not pointers:
+            self.pointers=[None for _ in range(self.n+1)]
 
-        if data:
-            self.data=data
-
-        if pointers:
-            self.pointers=pointers
     @property
     def t(self):
         '''Número máximo de filhos'''
@@ -35,6 +31,10 @@ class Node():
         '''Nó pai desse nó'''
         return self._parent
     
+    @property
+    def leaf(self):
+        return self._leaf
+
     @property
     def keys(self):
         '''Chaves contidas nesse nó'''
@@ -67,6 +67,10 @@ class Node():
         '''Sobreescreve os ponteiros filhos, por cópia de uma lista de ponteiros'''
         self._structure[2]=pointers[:]
         
+    @parent.setter
+    def parent(self,parent_node):
+        '''Define o nó pai do nó atual para 'parent_node' '''
+        self._parent=parent_node
 
     def is_vallid(self):
         t=self.t
@@ -82,40 +86,45 @@ class Node():
             key: chave a ser procurada no nó
         
         Return:
-            bool: informa se esse nó possui aquela chave
-            pointer: ponteiro para o nó que possui/pode possuir a chave
+            found: booleano que informa se esse nó possui aquela chave
+            node: ponteiro para o nó que possui/pode possuir a chave
             idx: o último índice de chaves visitado nesse nó cuja chave é menor que a procurada'''
-        
+        found=False
         for idx,curr_key in enumerate(self.keys):
             if curr_key==key: 
-                return True,self,idx-1 #A chave se encontra, nesse nó, no índice i
+                found=True
+                return found,self,idx #A chave se encontra, nesse nó, no índice idx
             if curr_key>key:  
-                return False, self.pointers[idx],idx-1 #A chave não está nesse nó, podendo estar no filho da esquerda ou abaixo dele
-        return False,self.pointers[idx+1],idx #A chave não está nesse nó, podendo estar no filho da direita ou abaixo dele
+                return found, self.pointers[idx],idx-1 #A chave não está nesse nó, podendo estar na subárvore da esquerda
+        return found,self.pointers[idx+1],idx #A chave não está nesse nó, podendo estar na subárvore da direita
     
-    def insert(self,key,val,idx,left_node=None,right_node=None):
-        '''Atualiza a chave e o valor na posição idx e também o apontamento esquerdo e direito dessa chave'''
-        self.keys[idx]=key
-        self.data[idx]=val
-        self.pointers[idx]=left_node
-        self.pointers[idx+1]=right_node
+    def insert(self,key,val,idx,right_node=None):
+        '''Atualiza a chave e o valor na posição idx, deslocando os elementos para a direita, sem alterar o tamanho da lista'''
+        self.keys.append(None)
+        
+        self.keys.insert(idx,key)
+        self.data.insert(idx,val)
+        self.pointers.insert(idx+1,right_node)
 
     def split(self):
-        '''Divide o nó atual em dois nós, cada um com metade das chaves
+        '''Divide o nó atual em dois nós, criando um novo nó e modificando o atual, 
+        cada um com metade dos elementos
         
-        retuurn:
-            left_node: nó resultante da primeira metade da divisão das chaves
+        return:
             right_node: nó resultante da segunda metade da divisão das chaves'''
 
         t=self.t
         keys=self.keys
         data=self.data
         pointers=self.pointers
+        right_node=Node(t,keys[ceil(t/2):],data[ceil(t/2):],pointers[ceil(t/2):],self.leaf,self.parent)
 
-        left_node=Node(t=t,keys=keys[:ceil(t/2)-1],data=data[:ceil(t/2)-1],pointers=pointers[:ceil(t/2)-1],parent=self.parent)
-        right_node=Node(t=t,keys=keys[ceil(t/2):],data=data[ceil(t/2):],pointers=pointers[ceil(t/2):],parent=self.parent)
-        
-        del self
-        return left_node,right_node
+        while self.n-1>ceil(t/2)-2:
+            self.pointers.pop()
+            self.keys.pop()
+            self.data.pop()
+            self._n-=1
+       
+        return right_node
 
 
