@@ -6,8 +6,6 @@ class Node():
         self._structure=[keys[:],     #Keys
                          data[:],     #Data
                          pointers[:]]   #Pointers
-        self._n=0 #número atual de keys registradas nesse nó, não possui setter ou getter por ser
-                  #um atributo que só é alterado a partir de outros métodos (protegido)
         self._leaf=leaf #informação booleana desse nó ser ou não folha
 
         self._parent=parent
@@ -24,7 +22,7 @@ class Node():
     @property
     def n(self):
         '''Número atual de chaves registradas nesse nó'''
-        return self._n
+        return len(self.keys)
     
     @property
     def parent(self):
@@ -74,7 +72,7 @@ class Node():
 
     def is_vallid(self):
         t=self.t
-        n=self._n
+        n=self.n
         if n>=t:
             raise f"Número de chaves excedeu o limite superior t={t}"
         if n<ceil(t/2)-1:
@@ -88,7 +86,8 @@ class Node():
         Return:
             found: booleano que informa se esse nó possui aquela chave
             node: ponteiro para o nó que possui/pode possuir a chave
-            idx: o último índice de chaves visitado nesse nó cuja chave é menor que a procurada'''
+            idx: índice em que a chave se encontra, ou deveria se encontrar caso existisse'''
+        
         found=False
         for idx,curr_key in enumerate(self.keys):
             if curr_key==key: 
@@ -99,12 +98,24 @@ class Node():
         return found,self.pointers[idx+1],idx #A chave não está nesse nó, podendo estar na subárvore da direita
     
     def insert(self,key,val,idx,right_node=None):
-        '''Atualiza a chave e o valor na posição idx, deslocando os elementos para a direita, sem alterar o tamanho da lista'''
-        self.keys.append(None)
+        '''Insere a chave e valor na posição idx, ou atualiza a informação caso a chave já exista. Caso o nó  esteja cheio, divide e repassa a inserção para o nó pai
+
+        Args: 
+        key=chave a ser inserida
+        val=informação associadaa á aquela chave
+        idx=índdice em que a chave devev ser inserida
+        right_node=nó que ficará a direita da chave inserida'''
         
-        self.keys.insert(idx,key)
-        self.data.insert(idx,val)
-        self.pointers.insert(idx+1,right_node)
+        if self.keys[idx]==key:#Atualizaz a iformação caso a chave já existta
+            self.data[idx]=val
+            if right_node: #Atualiza o ponteiro da direita, caso essa tenha sido passado
+                self.pointers[idx+1]=right_node
+
+        else:  #Insere a nova chave nesse nó
+            self.keys.append(None)
+            self.keys.insert(idx,key)
+            self.data.insert(idx,val)
+            self.pointers.insert(idx+1,right_node)
 
     def split(self):
         '''Divide o nó atual em dois nós, criando um novo nó e modificando o atual, 
@@ -128,3 +139,5 @@ class Node():
         return right_node
 
 
+node=Node(3)
+node.insert()
