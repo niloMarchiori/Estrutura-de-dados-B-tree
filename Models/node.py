@@ -197,7 +197,7 @@ class Node():
             return found,node,idx
 
     def remove_key(self,idx):
-        pass
+        self.keys.pop(idx)
 
     
     def print_in_line(self):

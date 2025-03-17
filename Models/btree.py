@@ -16,23 +16,6 @@ class B_tree():
             found: booleano que informa se esse nó possui aquela chave
             node: ponteiro para o nó que possui/pode possuir a chave
             idx: índice em que a chave se encontra, ou deveria se encontrar caso existisse'''
-        
-        # curr_node=self._root
-        # found=False
-
-        # while True:
-        #     idx=curr_node.idx(key) #Índice que aceitaria a chave (ignorando condição n<=t-1)
-        #     if curr_node.leaf and idx >= len(curr_node.keys): break
-        #     if curr_node.leaf and curr_node.keys[idx]!=key:   break
-        #     if idx >= len(curr_node.keys) or  curr_node.keys[idx]>key:
-        #         curr_node=curr_node.pointers[idx]
-        #     elif curr_node.keys[idx]<key:
-        #         curr_node=curr_node.pointers[idx+1]
-              
-        #     elif curr_node.keys[idx]==key:
-        #         found=True
-        #         break
-        # return found,curr_node,idx
 
         curr_node=self._root
         found=False
