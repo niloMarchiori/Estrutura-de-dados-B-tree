@@ -101,7 +101,7 @@ class Node():
         return found,self.pointers[idx+1],idx+1 #A chave não está nesse nó, podendo estar na subárvore da direita
     
     def idx(self,key):
-        '''Ecnontra o indice em que uma chave deveria se encontrar no nó'''
+        '''Ecnontra o indice em que uma chave deveria se encontrar no nó (ignorando condição idx<=t-1)'''
         idx=0
         for idx,curr_key in enumerate(self.keys):
             if curr_key>=key:     
@@ -175,6 +175,30 @@ class Node():
             self.data.pop()
        
         return right_node
+    
+    def find(self,key):
+        '''Return:
+            found: booleano que informa se esse nó possui aquela chave
+            node: ponteiro para raiz da subárvore que pode possuir a chave
+            idx: índice em que a chave se encontra, ou deveria se encontrar nesse nó'''
+        found=False
+        node=self
+        idx=self.idx(key)
+        if idx >= len(node.keys) or  node.keys[idx]>key:
+            node=node.pointers[idx]
+            return found,node,idx
+
+        elif node.keys[idx]<key:
+            node=node.pointers[idx+1]
+            return found,node,idx
+            
+        elif node.keys[idx]==key:
+            found=True
+            return found,node,idx
+
+    def remove_key(self,idx):
+        pass
+
     
     def print_in_line(self):
         out="["

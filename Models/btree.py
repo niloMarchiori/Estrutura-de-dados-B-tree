@@ -17,22 +17,34 @@ class B_tree():
             node: ponteiro para o nó que possui/pode possuir a chave
             idx: índice em que a chave se encontra, ou deveria se encontrar caso existisse'''
         
+        # curr_node=self._root
+        # found=False
+
+        # while True:
+        #     idx=curr_node.idx(key) #Índice que aceitaria a chave (ignorando condição n<=t-1)
+        #     if curr_node.leaf and idx >= len(curr_node.keys): break
+        #     if curr_node.leaf and curr_node.keys[idx]!=key:   break
+        #     if idx >= len(curr_node.keys) or  curr_node.keys[idx]>key:
+        #         curr_node=curr_node.pointers[idx]
+        #     elif curr_node.keys[idx]<key:
+        #         curr_node=curr_node.pointers[idx+1]
+              
+        #     elif curr_node.keys[idx]==key:
+        #         found=True
+        #         break
+        # return found,curr_node,idx
+
         curr_node=self._root
         found=False
 
-        while True:
-            idx=curr_node.idx(key) #Índice que aceitaria a chave (ignorando condição n<=t-1)
-            if curr_node.leaf and idx >= len(curr_node.keys): break
-            if curr_node.leaf and curr_node.keys[idx]!=key:   break
-            if idx >= len(curr_node.keys) or  curr_node.keys[idx]>key:
-                curr_node=curr_node.pointers[idx]
-            elif curr_node.keys[idx]<key:
-                curr_node=curr_node.pointers[idx+1]
-              
-            elif curr_node.keys[idx]==key:
-                found=True
-                break
-        return found,curr_node,idx
+        while not found and curr_node: #Desce ao longo da árvore até encontrar a chave, ou o nó se tornar nulo
+            parent_node=curr_node
+            found,curr_node,idx=curr_node.find(key)
+
+        if found: #Se a chave foi encontrada, o nó atual é o nó em que a chave se encontra
+            return found,curr_node,idx
+        else: #Se a chave não foi encontrada, o nó atual é nulo, e o pai dele é a folha
+            return found,parent_node,idx
     
 
     def btree_insert(self,key,val):
@@ -54,6 +66,30 @@ class B_tree():
                 if not(self._root.parent==None): 
                     self._root=self._root.parent
 
+    def btree_remove(self,key:int,node:Node=None,alredy_removed:bool=False):
+        '''Desce até o nó em que a chave deve ser removida
+        Args:
+        key=chave a ser removida
+        parent_idx=ín
+        node=Raiz da subárvore em que a chave se encontra
+        alredy_removed=Carrega a informação durante o desempilhamento da recursão se o processo de remoção foi finalizado
+        '''
+        # if not node: #Se um nó não é passado, a remoção inicia da raiz
+        #     node=self._root
+
+        # t=node.t
+
+        # if node.leaf:
+        #     idx=node.idx(key)
+        #     if idx >=t or node.keys[idx]!=key: #Se a chave não existe na árvore
+        #         return True
+        #     else:
+        #         node.
+
+        # if alredy_removed:
+        #     return True
+        # # if
+        
     
     def bsf_str(self):
         saida="-- ARVORE B \n"
