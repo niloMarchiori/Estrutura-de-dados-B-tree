@@ -1,21 +1,24 @@
-from Models.node import Node
-from math import ceil
-def split(self:Node):
-        '''Divide o nó atual em dois nós, criando um novo nó e modificando o atual, 
-        cada um com metade dos elementos
-        
-        return:
-            right_node: nó resultante da segunda metade da divisão das chaves'''
+import graphviz
 
-        t=self.t
-        keys=self.keys
-        data=self.data
-        pointers=self.pointers
-        right_node=Node(t,keys[ceil(t/2):],data[ceil(t/2):],pointers[ceil(t/2):],self.leaf,self.parent)
+def plot_tree():
+    tree = graphviz.Digraph(format='png')
     
-        while self.n-1>ceil(t/2)-2:
-            self.pointers.pop()
-            self.keys.pop()
-            self.data.pop()
-       
-        return right_node
+    # Adicionando nós (vértices)
+    tree.node('1', 'Raiz')
+    tree.node('BZ', 'Filho 1')
+    tree.node('CZ', 'Filho 2')
+    tree.node('DZ', 'Neto 1')
+    tree.node('Ez', 'Neto 2')
+    
+    # Adicionando arestas (conexões entre os nós)
+    tree.edge('1', 'BZ')
+    tree.edge('1', 'CZ')
+    tree.edge('BZ', 'DZ')
+    tree.edge('BZ', 'Ez')
+    
+    # Renderizar e salvar a árvore como imagem
+    tree.render('tree', format='png', cleanup=True)
+    print("Imagem gerada: tree.png")
+
+if __name__ == "__main__":
+    plot_tree()

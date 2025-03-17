@@ -104,7 +104,7 @@ class Node():
         '''Ecnontra o indice em que uma chave deveria se encontrar no nó'''
         idx=0
         for idx,curr_key in enumerate(self.keys):
-            if curr_key>key:     
+            if curr_key>=key:     
                 return idx 
         return idx+1 
 

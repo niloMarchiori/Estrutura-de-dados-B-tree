@@ -24,9 +24,9 @@ class B_tree():
             idx=curr_node.idx(key) #Índice que aceitaria a chave (ignorando condição n<=t-1)
             if curr_node.leaf and idx >= len(curr_node.keys): break
             if curr_node.leaf and curr_node.keys[idx]!=key:   break
-            if idx >= len(curr_node.keys) or  curr_node.keys[idx]<key:
+            if idx >= len(curr_node.keys) or  curr_node.keys[idx]>key:
                 curr_node=curr_node.pointers[idx]
-            elif curr_node.keys[idx]>key:
+            elif curr_node.keys[idx]<key:
                 curr_node=curr_node.pointers[idx+1]
               
             elif curr_node.keys[idx]==key:
@@ -55,10 +55,8 @@ class B_tree():
                     self._root=self._root.parent
 
     
-    def bsf_print(self):
-        print("-- ARVORE B \n")
-
-
+    def bsf_str(self):
+        saida="-- ARVORE B \n"
         fila=[self._root]
         
         while fila:
@@ -71,7 +69,7 @@ class B_tree():
                     continue
                 for child in curr_node.pointers:
                     fila.append(child)
-            print(level)
+            saida+=level+'\n'
 
-        return level
+        return saida
 
