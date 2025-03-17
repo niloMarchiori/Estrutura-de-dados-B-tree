@@ -48,9 +48,9 @@ class B_tree():
                 # por chamada da função), então a raiz dessa árvore é atualizada para o pai da raiz antiga
                 if not(self._root.parent==None): 
                     self._root=self._root.parent
-
-    def search_predecessor_sucessor(self,curr_node:Node,idx:int):
-        '''Procura na subárvore da direita e esquerda de uma chave em busca de um sucessor ou predecessor direto para ela
+    @staticmethod
+    def btree_inter_node(self,curr_node:Node,idx:int):
+        '''Remove uma key interna da da B-tree
         Args:
             curr_node= nó cuja chave está sendo substituída
             idx= índice da chave que está sendo substituída
@@ -66,7 +66,7 @@ class B_tree():
 
         pre_key=child.keys[-1]
         pre_val=child.data[-1]
-        if child.n>=self._t:#A chave pode ser removida dessa folha
+        if child.n>=ceil(self._t/2):#A chave pode ser removida dessa folha
             child.remove_key(-1)
             return  True,pre_key,pre_val
         
@@ -76,12 +76,24 @@ class B_tree():
             child=child.pointer[0]
 
         pos_key=child.keys[0]
-        pre_val=child.data[0]
-        if child.n>=self._t:#A chave pode ser removida dessa folha
+        pos_val=child.data[0]
+        if child.n>=ceil(self._t/2):#A chave pode ser removida dessa folha
             child.remove_key(0)
-            return  True,pre_key,pre_val
+            return  True,pos_key,pos_val
 
-        return False, None
+        return False, None,None
+    
+
+    @staticmethod
+    def get_brothers(parent:Node,child:Node,idx):
+        brothers=[]
+        if parent.pointers[idx+1]!=child:
+            brothers.append(parent.pointers[idx+1])
+        if parent.pointers[idx]!=child:
+            brothers.append(parent.pointers[idx])
+        return brothers
+        
+
     @staticmethod
     def concatenate(parent:Node,child:Node,brother:Node,idx:int):
         '''Efetua a redistribuição 
@@ -149,19 +161,12 @@ class B_tree():
         parent.update(idx=idx,key=goup_key,val=goup_val)
 
     @staticmethod
-    def can_redistribute(parent:Node,idx:int):
-        brother=None
+    def can_redistribute(parent:Node,child:Node,idx:int):
+        brothers=B_tree.get_brothers(parent,child,idx)
 
-        
-        brother=parent.pointers[idx+1]
-        if brother.n>=ceil(parent.t/2):
-            return True,brother
-
-        
-        brother=parent.pointers[idx]
-        if brother.n>=ceil(parent.t/2):
-            return True,brother
-            
+        for brother in brothers:
+            if brother.n>=ceil(parent.t/2):
+                return True,brother            
         return False,brother
             
 
@@ -194,7 +199,7 @@ class B_tree():
                 return curr_node.is_vallid() #Informa se a remoção terminou ou se propagou modificações
 
             elif not curr_node.leaf: #A chave está sendo removida de um nó interno
-                possible,goup_key,goup_val=self.search_predecessor_sucessor(curr_node,idx)
+                possible,goup_key,goup_val=self.btree_inter_node(curr_node,idx)
 
                 if possible: #Uma chave predecessora ou sucessora foi encontrada
                     curr_node.update(idx,goup_key,goup_val)
@@ -211,13 +216,17 @@ class B_tree():
             if removed_finish: #A remoção não propagou manipulações até essa chamada
                 return True
             
-            can_redis,brother=B_tree.can_redistribute(curr_node,idx)
+            can_redis,brother=B_tree.can_redistribute(curr_node,node,idx)
             if can_redis:    
                 B_tree.redistribute(curr_node,node,brother,idx)
                 return curr_node.is_vallid()
 
             else:
                 self.concatenate(curr_node,node,brother,idx)
+                if not self._root.keys:
+                    new_root=self._root.pointers[0]
+                    self._root=new_root
+                    new_root.parente=None
                 return curr_node.is_vallid()
             
         elif curr_node.leaf: #Se não foi encontrado e o nó atual é uma folha, a chave não existe

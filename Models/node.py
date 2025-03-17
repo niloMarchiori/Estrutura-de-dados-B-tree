@@ -209,7 +209,6 @@ class Node():
         self.data.pop(idx)
         self.pointers.pop(idx+1)
 
-    
     def print_in_line(self):
         out="["
         for key in self.keys:

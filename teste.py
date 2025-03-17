@@ -28,8 +28,21 @@ entrada= '''10
 36
 
 25
+1
+2
+6
 
-35
+1
+
+10
+
+2
+
+12
+
+6
+
+20
 '''
 
 sys.stdin=StringIO(entrada)
