@@ -10,8 +10,6 @@ class Node():
 
         self._parent=parent
 
-        if keys:
-            self._n=len(keys)
         if not pointers:
             self.pointers=[None for _ in range(self.n+1)]
 
@@ -51,8 +49,6 @@ class Node():
     def keys(self,keys:list):
         '''Sobreescreve as chaves, por cópia de uma lista de chaves'''
         self._structure[0]=keys[:]
-
-        self._n=len(keys)
     
     @data.setter
     def data(self,data:list):
@@ -87,17 +83,38 @@ class Node():
             found: booleano que informa se esse nó possui aquela chave
             node: ponteiro para o nó que possui/pode possuir a chave
             idx: índice em que a chave se encontra, ou deveria se encontrar caso existisse'''
-        
+        if key==44:
+            pass
         found=False
+        idx=0
         for idx,curr_key in enumerate(self.keys):
             if curr_key==key: 
                 found=True
                 return found,self,idx #A chave se encontra, nesse nó, no índice idx
-            if curr_key>key:  
-                return found, self.pointers[idx],idx-1 #A chave não está nesse nó, podendo estar na subárvore da esquerda
-        return found,self.pointers[idx+1],idx #A chave não está nesse nó, podendo estar na subárvore da direita
+            if curr_key>key:  #A chave não está nesse nó
+                if self.leaf: #A chave deveria estar nessa folha
+                    return found, self, idx 
+                return found, self.pointers[idx],idx #A chave pode estar na subárvore da esquerda
+            
+        if self.leaf: #A chave deveria estar na última chave dessa folha
+                return found, self,idx+1 
+        return found,self.pointers[idx+1],idx+1 #A chave não está nesse nó, podendo estar na subárvore da direita
     
-    def insert(self,key,val,idx,right_node=None):
+    def idx(self,key):
+        '''Ecnontra o indice em que uma chave deveria se encontrar no nó'''
+        idx=0
+        for idx,curr_key in enumerate(self.keys):
+            if curr_key>key:     
+                return idx 
+        return idx+1 
+
+
+    def update_val(self,val,idx,right_node=None):
+            self.data[idx]=val
+            if right_node: #Atualiza o ponteiro da direita, caso essa tenha sido passado
+                self.pointers[idx+1]=right_node
+
+    def insert(self,key:int,val,idx:int=None,right_node=None):
         '''Insere a chave e valor na posição idx, ou atualiza a informação caso a chave já exista. Caso o nó  esteja cheio, divide e repassa a inserção para o nó pai
 
         Args: 
@@ -105,17 +122,35 @@ class Node():
         val=informação associadaa á aquela chave
         idx=índdice em que a chave devev ser inserida
         right_node=nó que ficará a direita da chave inserida'''
-        
-        if self.keys[idx]==key:#Atualizaz a iformação caso a chave já existta
-            self.data[idx]=val
-            if right_node: #Atualiza o ponteiro da direita, caso essa tenha sido passado
-                self.pointers[idx+1]=right_node
 
-        else:  #Insere a nova chave nesse nó
-            self.keys.append(None)
-            self.keys.insert(idx,key)
-            self.data.insert(idx,val)
-            self.pointers.insert(idx+1,right_node)
+        if idx==None:#Se o índice de inserção não é passado, ele é encontrado
+            idx=self.idx(key)
+    
+         
+        self.keys.insert(idx,key)
+        self.data.insert(idx,val)
+        self.pointers.insert(idx+1,right_node)
+
+        t=self.t
+        if self.n>t-1: #O nó ultrapassou o limite de elementos
+
+            middle_key=self.keys[ceil(t/2)-1] #Chave que vai subir
+            middle_data=self.data[ceil(t/2)-1] #Informação que vai subir
+            new_node=self.split() #Novo filho que ficará a direita da chave que subir
+            parent=self.parent
+
+            if parent==None: #O nó atual é a raiz
+                new_root=Node(t,keys=[middle_key],data=[middle_data],leaf=False)
+                new_root.pointers[0]=self
+                new_root.pointers[1]=new_node
+
+                self.parent=new_root
+                new_node.parent=new_root
+                pass
+            else:
+                parent.insert(middle_key,middle_data,right_node=new_node)
+
+
 
     def split(self):
         '''Divide o nó atual em dois nós, criando um novo nó e modificando o atual, 
@@ -129,15 +164,21 @@ class Node():
         data=self.data
         pointers=self.pointers
         right_node=Node(t,keys[ceil(t/2):],data[ceil(t/2):],pointers[ceil(t/2):],self.leaf,self.parent)
+        
+        if not right_node.leaf: 
+            for child in right_node.pointers:
+                child.parent=right_node
 
         while self.n-1>ceil(t/2)-2:
             self.pointers.pop()
             self.keys.pop()
             self.data.pop()
-            self._n-=1
        
         return right_node
-
-
-node=Node(3)
-node.insert()
+    
+    def print_in_line(self):
+        out="["
+        for key in self.keys:
+            out+=f"key: {key}, "
+        out+="]"
+        return out
