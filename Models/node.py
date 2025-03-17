@@ -69,10 +69,8 @@ class Node():
     def is_vallid(self):
         t=self.t
         n=self.n
-        if n>=t:
-            raise f"Número de chaves excedeu o limite superior t={t}"
-        if n<ceil(t/2)-1:
-            raise f"Número de chaves é menor que o limite inferior t={ceil(t/2)-1}"
+        if n>=t or n<ceil(t/2)-1:return False
+        return True
             
             
     def find(self,key:int):
@@ -109,10 +107,18 @@ class Node():
         return idx+1 
 
 
-    def update_val(self,val,idx,right_node=None):
-            self.data[idx]=val
-            if right_node: #Atualiza o ponteiro da direita, caso essa tenha sido passado
+    def update(self,idx,key=None,val=None,left_node=None,right_node=None):
+            if not key is None:
+                self.keys[idx]=key
+
+            if not val is None:
+                self.data[idx]=val
+                
+            if right_node: 
                 self.pointers[idx+1]=right_node
+
+            if left_node: 
+                self.pointers[idx]=left_node
 
     def insert(self,key:int,val,idx:int=None,right_node=None):
         '''Insere a chave e valor na posição idx, ou atualiza a informação caso a chave já exista. Caso o nó  esteja cheio, divide e repassa a inserção para o nó pai
@@ -121,7 +127,8 @@ class Node():
         key=chave a ser inserida
         val=informação associadaa á aquela chave
         idx=índdice em que a chave devev ser inserida
-        right_node=nó que ficará a direita da chave inserida'''
+        right_node=nó que ficará a direita da chave inserida
+        '''
 
         if idx==None:#Se o índice de inserção não é passado, ele é encontrado
             idx=self.idx(key)
@@ -197,7 +204,10 @@ class Node():
             return found,node,idx
 
     def remove_key(self,idx):
+        '''Remove a idx-ésima chave'''
         self.keys.pop(idx)
+        self.data.pop(idx)
+        self.pointers.pop(idx+1)
 
     
     def print_in_line(self):

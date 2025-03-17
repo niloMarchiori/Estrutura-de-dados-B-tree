@@ -21,7 +21,7 @@ class B_tree():
         found=False
 
         while not found and curr_node: #Desce ao longo da árvore até encontrar a chave, ou o nó se tornar nulo
-            parent_node=curr_node
+            parent_node=curr_node #Parente guarda o último nó visitado, na última iteração ele será a folha que deveria possuir a chave
             found,curr_node,idx=curr_node.find(key)
 
         if found: #Se a chave foi encontrada, o nó atual é o nó em que a chave se encontra
@@ -40,7 +40,7 @@ class B_tree():
             found,node,idx=self.btree_find(key) #Encontra a folha que a chave precisa estar
 
             if found: #A chave já existe, é necessário atualizar a informação apenas
-                node.update_val(val,idx)
+                node.update(val=val,idx=idx)
             else:    
                 node.insert(key,val,idx) #Insere a chave nessa folha, e recursivamente para os pais dela
 
@@ -49,31 +49,180 @@ class B_tree():
                 if not(self._root.parent==None): 
                     self._root=self._root.parent
 
-    def btree_remove(self,key:int,node:Node=None,alredy_removed:bool=False):
-        '''Desce até o nó em que a chave deve ser removida
+    def search_predecessor_sucessor(self,curr_node:Node,idx:int):
+        '''Procura na subárvore da direita e esquerda de uma chave em busca de um sucessor ou predecessor direto para ela
         Args:
-        key=chave a ser removida
-        parent_idx=ín
-        node=Raiz da subárvore em que a chave se encontra
-        alredy_removed=Carrega a informação durante o desempilhamento da recursão se o processo de remoção foi finalizado
-        '''
-        # if not node: #Se um nó não é passado, a remoção inicia da raiz
-        #     node=self._root
-
-        # t=node.t
-
-        # if node.leaf:
-        #     idx=node.idx(key)
-        #     if idx >=t or node.keys[idx]!=key: #Se a chave não existe na árvore
-        #         return True
-        #     else:
-        #         node.
-
-        # if alredy_removed:
-        #     return True
-        # # if
-        
+            curr_node= nó cuja chave está sendo substituída
+            idx= índice da chave que está sendo substituída
+        return:
+            bool= booleano que informa se o sucessor/predecessor pode ser usado sem quebrar a validade das folhas
+            key= chave sucessora/predecessora
+            val= informacao associada a chave sucessora/predecessora'''
     
+        #Encontra chave predecessora
+        child=curr_node.pointers[idx]
+        while not child.leaf:
+            child=child.pointer[-1]
+
+        pre_key=child.keys[-1]
+        pre_val=child.data[-1]
+        if child.n>=self._t:#A chave pode ser removida dessa folha
+            child.remove_key(-1)
+            return  True,pre_key,pre_val
+        
+        #Se a predecessora não puder ser removida, procura-se a sucessora
+        child=curr_node.pointers[idx+1]
+        while not child.leaf:
+            child=child.pointer[0]
+
+        pos_key=child.keys[0]
+        pre_val=child.data[0]
+        if child.n>=self._t:#A chave pode ser removida dessa folha
+            child.remove_key(0)
+            return  True,pre_key,pre_val
+
+        return False, None
+    @staticmethod
+    def concatenate(parent:Node,child:Node,brother:Node,idx:int):
+        '''Efetua a redistribuição 
+        Args:
+            parent: Pai que cede a chave
+            child=Filho com número de chaves problemáticas
+            brother=irmão adjacente ao nó problemático
+            idx=Índice da chave que divide os dois nós
+            '''
+        godown_key=parent.keys[idx]
+        godown_val=parent.data[idx]
+
+
+        if parent.keys[idx]<brother.keys[0]: #É o irmão adjacente a direita]
+            parent.remove_key(idx)
+            child.insert(godown_key,godown_val,child.n,brother.pointers[0])
+            j=child.n
+            for i in range(brother.n):
+                key=brother.keys[i]
+                val=brother.data[i]
+                right_node=brother.pointers[i+1]
+                child.insert(key,val,j+i,right_node)
+            parent.pointers[idx]=child
+            if not brother.leaf:
+                for son in child.pointers:
+                    son.parent=child
+            
+        else: #É o irmão adjacente da esquerda
+            parent.remove_key(idx)
+            brother.insert(godown_key,godown_val,brother.n,child.pointers[0])
+            j=brother.n
+            for i in range(child.n):
+                key=child.keys[i]
+                val=child.data[i]
+                right_node=child.pointers[i+1]
+                brother.insert(key,val,j+i,right_node)
+            parent.pointers[idx]=brother
+            if not brother.leaf:
+                for son in brother.pointers:
+                    son.parent=brother
+            
+    @staticmethod
+    def redistribute(parent:Node,child:Node,brother:Node,idx:int):
+        '''Efetua a concatenação 
+        Args:
+            parent: Pai que cede a chave
+            child=Filho com número de chaves problemáticas
+            brother=irmão adjacente ao nó problemático
+            idx=Índice da chave que divide os dois nós
+            '''
+        godown_key=parent.keys[idx]
+        godown_val=parent.data[idx]
+
+        if parent.keys[idx]<brother.keys[0]: #É o irmão adjacente a direita
+            goup_key=brother.keys[0]
+            goup_val=brother.data[0]
+            brother.remove_key(0)
+            child.insert(godown_key,godown_val,child.n)
+        else: #É o irmão adjacente da esquerda
+            goup_key=brother.keys[-1]
+            goup_val=brother.data[-1]
+            brother.remove_key(-1)
+            child.insert(godown_key,godown_val,0)
+
+        parent.update(idx=idx,key=goup_key,val=goup_val)
+
+    @staticmethod
+    def can_redistribute(parent:Node,idx:int):
+        brother=None
+
+        
+        brother=parent.pointers[idx+1]
+        if brother.n>=ceil(parent.t/2):
+            return True,brother
+
+        
+        brother=parent.pointers[idx]
+        if brother.n>=ceil(parent.t/2):
+            return True,brother
+            
+        return False,brother
+            
+
+
+    def btree_remove(self,key:int,curr_node:Node=None):
+        '''Desce recursivamente até o nó em que a chave deve ser removida
+        Args:
+            key=chave a ser removida
+            parent_idx=ín
+            node=Raiz da subárvore em que a chave se encontra
+        return:
+            Booleano que indica no desempilhamento ainda existem manipulações a serem feitas, resultantes da remoção
+        '''
+        removed_finish=False
+
+        if not curr_node: #Se um nó não é passado, a remoção inicia da raiz
+            curr_node=self._root
+
+        t=self._t
+        #Encontra o nó filho que possui a chave, ou a raiz da subárvore que pode possuí-la
+        found,node,idx=curr_node.find(key) 
+
+        if found: #Se ele foi encontrado, node=curr_node
+            if curr_node.parent==None and curr_node.leaf: #A árvore possui apenas a raiz
+                curr_node.remove_key(idx)
+                return True
+
+            elif curr_node.leaf:
+                curr_node.remove_key(idx)
+                return curr_node.is_vallid() #Informa se a remoção terminou ou se propagou modificações
+
+            elif not curr_node.leaf: #A chave está sendo removida de um nó interno
+                possible,goup_key,goup_val=self.search_predecessor_sucessor(curr_node,idx)
+
+                if possible: #Uma chave predecessora ou sucessora foi encontrada
+                    curr_node.update(idx,goup_key,goup_val)
+                    return True
+                else:
+                    return False
+        
+        elif not curr_node.leaf: #Chave foi encontrado, mas ainda pode existir na subárvore com raiz em 'node'
+            removed_finish=self.btree_remove(key,node)
+
+            if idx==curr_node.n: #Significa que caso a chave estivesse nesse nó, ela seria a última chave
+                idx-=1 #Recua o índice da chave, pois 'node' está a direita da última chave
+
+            if removed_finish: #A remoção não propagou manipulações até essa chamada
+                return True
+            
+            can_redis,brother=B_tree.can_redistribute(curr_node,idx)
+            if can_redis:    
+                B_tree.redistribute(curr_node,node,brother,idx)
+                return curr_node.is_vallid()
+
+            else:
+                self.concatenate(curr_node,node,brother,idx)
+                return curr_node.is_vallid()
+            
+        elif curr_node.leaf: #Se não foi encontrado e o nó atual é uma folha, a chave não existe
+            return True
+        
     def bsf_str(self):
         saida="-- ARVORE B \n"
         fila=[self._root]
@@ -83,7 +232,7 @@ class B_tree():
             level=''
             for _ in range(level_nodes):
                 curr_node=fila.pop(0)
-                level+=curr_node.print_in_line()
+                level+=curr_node.print_in_line()+" "
                 if curr_node.leaf:
                     continue
                 for child in curr_node.pointers:

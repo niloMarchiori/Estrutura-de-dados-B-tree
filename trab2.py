@@ -28,9 +28,10 @@ def input(input_dir):
                 saida+="O REGISTRO NAO ESTA NA ARVORE!\n"
         
         if line[0]=="R":
-            key=int(line[1].split(','))
-            val=int(line[2])
-            btree.btree_insert(key,val)
+            key=int(line[1])
+            btree.btree_remove(key)
+        
+        
     saida+=btree.bsf_str()
     return saida
 
