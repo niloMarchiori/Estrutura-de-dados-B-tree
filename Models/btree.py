@@ -48,42 +48,38 @@ class B_tree():
                 # por chamada da função), então a raiz dessa árvore é atualizada para o pai da raiz antiga
                 if not(self._root.parent==None): 
                     self._root=self._root.parent
+    
     @staticmethod
-    def btree_inter_node(self,curr_node:Node,idx:int):
-        '''Remove uma key interna da da B-tree
+    def search_predecessor_sucessor(curr_node:Node,idx:int):
+        '''Procura pela chave predecessora ou sucessora de uma chave, dando preferência à aquela contida em um nó x tal que n[x]>=ceil(t/2)
         Args:
             curr_node= nó cuja chave está sendo substituída
             idx= índice da chave que está sendo substituída
         return:
-            bool= booleano que informa se o sucessor/predecessor pode ser usado sem quebrar a validade das folhas
+            left= booleano que informa se a nova chave está no filho da esquerda (predecessor) ou direita (sucessor)
             key= chave sucessora/predecessora
             val= informacao associada a chave sucessora/predecessora'''
-    
+        left=False
+
         #Encontra chave predecessora
         child=curr_node.pointers[idx]
         while not child.leaf:
             child=child.pointer[-1]
-
         pre_key=child.keys[-1]
         pre_val=child.data[-1]
-        if child.n>=ceil(self._t/2):#A chave pode ser removida dessa folha
-            child.remove_key(-1)
-            return  True,pre_key,pre_val
+        if child.n>=ceil(curr_node.t/2):#A chave pode ser removida dessa folha
+            left=True
+            return  left,pre_key,pre_val
         
         #Se a predecessora não puder ser removida, procura-se a sucessora
         child=curr_node.pointers[idx+1]
         while not child.leaf:
             child=child.pointer[0]
-
         pos_key=child.keys[0]
         pos_val=child.data[0]
-        if child.n>=ceil(self._t/2):#A chave pode ser removida dessa folha
-            child.remove_key(0)
-            return  True,pos_key,pos_val
 
-        return False, None,None
+        return left,pos_key,pos_val
     
-
     @staticmethod
     def get_brothers(parent:Node,child:Node,idx):
         brothers=[]
@@ -93,7 +89,6 @@ class B_tree():
             brothers.append(parent.pointers[idx])
         return brothers
         
-
     @staticmethod
     def concatenate(parent:Node,child:Node,brother:Node,idx:int):
         '''Efetua a redistribuição 
@@ -168,11 +163,24 @@ class B_tree():
             if brother.n>=ceil(parent.t/2):
                 return True,brother            
         return False,brother
-            
+    
+    
+    def fix_subtree(self,curr_node,problematic_node,idx):
+        can_redis,brother=B_tree.can_redistribute(curr_node,problematic_node,idx)
+        if can_redis: 
+            B_tree.redistribute(curr_node,problematic_node,brother,idx)
+            return curr_node.is_vallid()
 
-
+        else:
+            self.concatenate(curr_node,problematic_node,brother,idx)
+            if not self._root.keys:
+                new_root=self._root.pointers[0]
+                self._root=new_root
+                new_root.parente=None
+            return curr_node.is_vallid()
+        
     def btree_remove(self,key:int,curr_node:Node=None):
-        '''Desce recursivamente até o nó em que a chave deve ser removida
+        '''Desce recursivamente até o nó em que a chave deve ser removida, enquanto desempilha as chamadas da função manipulação necessárias são feitas
         Args:
             key=chave a ser removida
             parent_idx=ín
@@ -196,18 +204,24 @@ class B_tree():
 
             elif curr_node.leaf:
                 curr_node.remove_key(idx)
-                return curr_node.is_vallid() #Informa se a remoção terminou ou se propagou modificações
+                return curr_node.is_vallid()
 
             elif not curr_node.leaf: #A chave está sendo removida de um nó interno
-                possible,goup_key,goup_val=self.btree_inter_node(curr_node,idx)
+                left,new_key,new_val=B_tree.search_predecessor_sucessor(curr_node,idx) #Procura pela chave predecessora ou sucessora
+                curr_node.update(idx,new_key,new_val) #Substitui a chave
 
-                if possible: #Uma chave predecessora ou sucessora foi encontrada
-                    curr_node.update(idx,goup_key,goup_val)
-                    return True
+                if left:
+                    subtree=curr_node.pointers[idx]
                 else:
-                    return False
+                    subtree=curr_node.pointers[idx+1]
+                
+                self.btree_remove(new_key,subtree) #Remove da folha a chave usada no nó atual
+                if not subtree.is_vallid():
+                    self.fix_subtree(curr_node,subtree,idx)
+                return curr_node.is_vallid()
+
         
-        elif not curr_node.leaf: #Chave foi encontrado, mas ainda pode existir na subárvore com raiz em 'node'
+        elif not curr_node.leaf: #Chave não foi encontrado, mas ainda pode existir na subárvore com raiz em 'node'
             removed_finish=self.btree_remove(key,node)
 
             if idx==curr_node.n: #Significa que caso a chave estivesse nesse nó, ela seria a última chave
@@ -216,22 +230,14 @@ class B_tree():
             if removed_finish: #A remoção não propagou manipulações até essa chamada
                 return True
             
-            can_redis,brother=B_tree.can_redistribute(curr_node,node,idx)
-            if can_redis:    
-                B_tree.redistribute(curr_node,node,brother,idx)
-                return curr_node.is_vallid()
-
-            else:
-                self.concatenate(curr_node,node,brother,idx)
-                if not self._root.keys:
-                    new_root=self._root.pointers[0]
-                    self._root=new_root
-                    new_root.parente=None
-                return curr_node.is_vallid()
+            return self.fix_subtree(curr_node,node,idx)    
+                
             
         elif curr_node.leaf: #Se não foi encontrado e o nó atual é uma folha, a chave não existe
             return True
         
+
+    
     def bsf_str(self):
         saida="-- ARVORE B \n"
         fila=[self._root]

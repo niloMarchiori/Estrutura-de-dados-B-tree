@@ -36,18 +36,18 @@ entrada= '''10
 
 10
 
-2
-
 12
 
 6
 
 20
+
+16
 '''
 
 sys.stdin=StringIO(entrada)
 
-btree=B_tree(4)
+btree=B_tree(5)
 while True:
     line=input()
     try:
@@ -58,3 +58,4 @@ while True:
         i=int(input())
         btree.btree_remove(i)
         print(btree.bsf_str())
+
