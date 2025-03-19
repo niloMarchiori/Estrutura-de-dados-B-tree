@@ -81,8 +81,6 @@ class Node():
             found: booleano que informa se esse nó possui aquela chave
             node: ponteiro para o nó que possui/pode possuir a chave
             idx: índice em que a chave se encontra, ou deveria se encontrar caso existisse'''
-        if key==44:
-            pass
         found=False
         idx=0
         for idx,curr_key in enumerate(self.keys):
@@ -153,7 +151,7 @@ class Node():
 
                 self.parent=new_root
                 new_node.parent=new_root
-                pass
+    
             else:
                 parent.insert(middle_key,middle_data,right_node=new_node)
 
@@ -184,10 +182,13 @@ class Node():
         return right_node
     
     def find(self,key):
-        '''Return:
+        '''Args:
+            Key= Chave a ser encontrada nesse nó
+        Return:
             found: booleano que informa se esse nó possui aquela chave
             node: ponteiro para raiz da subárvore que pode possuir a chave
             idx: índice em que a chave se encontra, ou deveria se encontrar nesse nó'''
+        
         found=False
         node=self
         idx=self.idx(key)

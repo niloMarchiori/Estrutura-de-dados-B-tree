@@ -1,4 +1,3 @@
-from Models.node import Node
 from Models.btree import B_tree
 
 from sys import argv

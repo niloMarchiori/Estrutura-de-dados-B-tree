@@ -37,6 +37,9 @@ class B_tree():
         if self._root==None: #Se a árvore ainda está vazia
             self._root=Node(self._t,[key],data=[val])
         else:
+            #####################
+            if key==540:
+                pass
             found,node,idx=self.btree_find(key) #Encontra a folha que a chave precisa estar
 
             if found: #A chave já existe, é necessário atualizar a informação apenas
@@ -64,7 +67,7 @@ class B_tree():
         #Encontra chave predecessora
         child=curr_node.pointers[idx]
         while not child.leaf:
-            child=child.pointer[-1]
+            child=child.pointers[-1]
         pre_key=child.keys[-1]
         pre_val=child.data[-1]
         if child.n>=ceil(curr_node.t/2):#A chave pode ser removida dessa folha
@@ -74,7 +77,7 @@ class B_tree():
         #Se a predecessora não puder ser removida, procura-se a sucessora
         child=curr_node.pointers[idx+1]
         while not child.leaf:
-            child=child.pointer[0]
+            child=child.pointers[0]
         pos_key=child.keys[0]
         pos_val=child.data[0]
 
@@ -101,34 +104,27 @@ class B_tree():
         godown_key=parent.keys[idx]
         godown_val=parent.data[idx]
 
+        #Abaixo é feita a concatenação das listas pela direita, para melhorar o desempenho
 
         if parent.keys[idx]<brother.keys[0]: #É o irmão adjacente a direita]
-            parent.remove_key(idx)
-            child.insert(godown_key,godown_val,child.n,brother.pointers[0])
-            j=child.n
-            for i in range(brother.n):
-                key=brother.keys[i]
-                val=brother.data[i]
-                right_node=brother.pointers[i+1]
-                child.insert(key,val,j+i,right_node)
-            parent.pointers[idx]=child
-            if not brother.leaf:
-                for son in child.pointers:
-                    son.parent=child
+
+            new_keys=child.keys + [godown_key] + brother.keys
+            new_data=child.data + [godown_val] + brother.data
+            new_pointer=child.pointers+brother.pointers
             
         else: #É o irmão adjacente da esquerda
-            parent.remove_key(idx)
-            brother.insert(godown_key,godown_val,brother.n,child.pointers[0])
-            j=brother.n
-            for i in range(child.n):
-                key=child.keys[i]
-                val=child.data[i]
-                right_node=child.pointers[i+1]
-                brother.insert(key,val,j+i,right_node)
-            parent.pointers[idx]=brother
-            if not brother.leaf:
-                for son in brother.pointers:
-                    son.parent=brother
+            new_keys= brother.keys + [godown_key] + child.keys
+            new_data=brother.data + [godown_val] + child.data
+            new_pointer=brother.pointers+child.pointers
+        parent.remove_key(idx) #O pai perde sua chave e um dos ponteiros
+
+        #Um novo nó é criado com os dados oriundos da concatenação
+        new_node=Node(parent.t,new_keys,new_data,new_pointer,brother.leaf,parent)
+        parent.pointers[idx]=new_node
+
+        if not new_node.leaf:
+            for son in new_node.pointers:
+                son.parent=new_node
             
     @staticmethod
     def redistribute(parent:Node,child:Node,brother:Node,idx:int):
@@ -159,16 +155,26 @@ class B_tree():
     def can_redistribute(parent:Node,child:Node,idx:int):
         brothers=B_tree.get_brothers(parent,child,idx)
 
+        
         for brother in brothers:
             if brother.n>=ceil(parent.t/2):
-                return True,brother            
+                if brother.leaf: 
+                    return True,brother            
         return False,brother
     
     
-    def fix_subtree(self,curr_node,problematic_node,idx):
+    def fix_subtree(self,curr_node:Node,problematic_node:Node,idx):
         can_redis,brother=B_tree.can_redistribute(curr_node,problematic_node,idx)
+
+        ####################
+        if curr_node.keys[idx]==621:
+            pass
+
         if can_redis: 
             B_tree.redistribute(curr_node,problematic_node,brother,idx)
+            ########################
+            if len(curr_node.keys)+1!=len(curr_node.pointers):
+                pass
             return curr_node.is_vallid()
 
         else:
@@ -177,6 +183,7 @@ class B_tree():
                 new_root=self._root.pointers[0]
                 self._root=new_root
                 new_root.parente=None
+            
             return curr_node.is_vallid()
         
     def btree_remove(self,key:int,curr_node:Node=None):
@@ -188,6 +195,9 @@ class B_tree():
         return:
             Booleano que indica no desempilhamento ainda existem manipulações a serem feitas, resultantes da remoção
         '''
+        ########################
+        if key==517:
+            pass
         removed_finish=False
 
         if not curr_node: #Se um nó não é passado, a remoção inicia da raiz
