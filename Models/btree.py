@@ -7,6 +7,8 @@ class B_tree():
             raise "Não existe árvore de ordem 0"
         self._t=t       #Atributos t e head só devem ser alterados a partir 
         self._root=node #das funções, portanto não possuem setter
+        if not node:
+            self._root=Node(t)
 
     def btree_find(self,key):
         '''Args:
@@ -16,10 +18,13 @@ class B_tree():
             found: booleano que informa se esse nó possui aquela chave
             node: ponteiro para o nó que possui/pode possuir a chave
             idx: índice em que a chave se encontra, ou deveria se encontrar caso existisse'''
-
+        
+        if not self._root.keys:
+            return False,self._root,0
+        
         curr_node=self._root
         found=False
-
+    
         while not found and curr_node: #Desce ao longo da árvore até encontrar a chave, ou o nó se tornar nulo
             parent_node=curr_node #Parente guarda o último nó visitado, na última iteração ele será a folha que deveria possuir a chave
             found,curr_node,idx=curr_node.find(key)
@@ -195,13 +200,14 @@ class B_tree():
         return:
             Booleano que indica no desempilhamento ainda existem manipulações a serem feitas, resultantes da remoção
         '''
-        ########################
-        if key==517:
-            pass
-        removed_finish=False
-
+    
+        
+        if not self._root.keys: #A árvore se encontra vazia
+            return True
+        
         if not curr_node: #Se um nó não é passado, a remoção inicia da raiz
             curr_node=self._root
+    
 
         t=self._t
         #Encontra o nó filho que possui a chave, ou a raiz da subárvore que pode possuí-la

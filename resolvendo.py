@@ -2,7 +2,7 @@ from Models.node import Node
 from Models.btree import B_tree
 from random import randint
 
-btree=B_tree(3)
+btree=B_tree(4)
 count=0
 operacoes=''
 with open('teste.txt','r') as doc:
