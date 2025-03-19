@@ -182,7 +182,7 @@ class B_tree():
             if not self._root.keys:
                 new_root=self._root.pointers[0]
                 self._root=new_root
-                new_root.parente=None
+                new_root.parent=None
             
             return curr_node.is_vallid()
         
@@ -242,10 +242,14 @@ class B_tree():
             
             return self.fix_subtree(curr_node,node,idx)    
                 
-            
         elif curr_node.leaf: #Se não foi encontrado e o nó atual é uma folha, a chave não existe
             return True
         
+        #Ao final do processo de remoção, confere se a raiz não está vazia
+        while self._root.n==0:
+            new_root=self._root
+            self._root=new_root
+            new_root.parent=None
 
     
     def bsf_str(self):

@@ -16,6 +16,6 @@ for line in entrada:
         btree.btree_insert(i,1)
     else:
         btree.btree_remove(key=i)
-    # print(btree.bsf_str())
+    print(btree.bsf_str())
 
 
